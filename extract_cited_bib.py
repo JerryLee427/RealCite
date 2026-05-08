@@ -103,9 +103,14 @@ def collect_tex_sources(root_tex: Path) -> dict[Path, str]:
 
     seen: dict[Path, str] = {}
 
-    def visit(tex_path: Path) -> None:
+    def visit(tex_path: Path, root: bool = False) -> None:
         resolved = tex_path.resolve()
-        if resolved in seen or not resolved.exists():
+        if resolved in seen:
+            return
+        if not resolved.exists():
+            if root:
+                raise SystemExit(f"Error: root TeX file not found: {tex_path}")
+            print(f"Warning: included file not found, skipping: {tex_path}")
             return
 
         raw = resolved.read_text(encoding="utf-8")
@@ -118,7 +123,7 @@ def collect_tex_sources(root_tex: Path) -> dict[Path, str]:
                 child = child.with_suffix(".tex")
             visit(child)
 
-    visit(root_tex)
+    visit(root_tex, root=True)
     return seen
 
 
